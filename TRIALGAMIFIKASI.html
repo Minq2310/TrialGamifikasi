@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Work-Wallet: Misi Saldo Emosi</title>
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --primary: #FFD166; /* Kuning cerah */
+            --secondary: #EF476F; /* Pink */
+            --tertiary: #118AB2; /* Biru */
+            --success: #06D6A0; /* Hijau Mint */
+            --text-dark: #121212;
+            --border-width: 4px;
+            --shadow-depth: 6px;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--text-dark) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border-left: var(--border-width) solid var(--text-dark);
+            border-right: var(--border-width) solid var(--text-dark);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .neo-box {
+            background: #fff;
+            border: var(--border-width) solid var(--text-dark);
+            box-shadow: var(--shadow-depth) var(--shadow-depth) 0px var(--text-dark);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 15px;
+            position: relative;
+        }
+
+        .neo-btn {
+            background: var(--primary);
+            border: var(--border-width) solid var(--text-dark);
+            box-shadow: var(--shadow-depth) var(--shadow-depth) 0px var(--text-dark);
+            color: var(--text-dark);
+            padding: 15px 20px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 100%;
+            text-transform: uppercase;
+            transition: all 0.1s ease-in-out;
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        .neo-btn:active {
+            transform: translate(var(--shadow-depth), var(--shadow-depth));
+            box-shadow: 0px 0px 0px var(--text-dark);
+        }
+
+        .neo-btn.blue { background: var(--tertiary); color: #fff; }
+        .neo-btn.pink { background: var(--secondary); color: #fff; }
+        .neo-btn.green { background: var(--success); color: var(--text-dark); }
+
+        .neo-input {
+            width: 100%;
+            padding: 15px;
+            border: var(--border-width) solid var(--text-dark);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            background: #fdfdfd;
+        }
+        
+        .neo-input:focus {
+            outline: none;
+            background: #fff;
+            box-shadow: inset 2px 2px 0px var(--text-dark);
+        }
+
+        .screen { display: none; padding-bottom: 80px; }
+        .screen.active { display: block; animation: slideUp 0.4s ease-out; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .top-bar {
+            background: var(--tertiary);
+            color: #fff;
+            padding: 15px;
+            border-bottom: var(--border-width) solid var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            background: #fff;
+            border: 3px solid var(--text-dark);
+            height: 24px;
+            border-radius: 12px;
+            margin: 0 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: var(--primary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-right: 3px solid var(--text-dark);
+        }
+
+        .wallet-label { font-weight: 900; font-size: 0.85rem; text-transform: uppercase; }
+        
+        .audio-btn {
+            background: var(--secondary);
+            border: 2px solid var(--text-dark);
+            color: #fff;
+            padding: 8px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 2px 2px 0px var(--text-dark);
+        }
+        
+        .audio-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0px 0px 0px var(--text-dark);
+        }
+
+        .dialog-image-placeholder {
+            background: repeating-linear-gradient(45deg, var(--primary), var(--primary) 10px, #e5b850 10px, #e5b850 20px);
+            height: 160px;
+            border: var(--border-width) solid var(--text-dark);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 10px;
+            box-shadow: inset 0px 0px 20px rgba(0,0,0,0.1);
+        }
+
+        .hint-text {
+            font-size: 0.9rem;
+            background: #eef2f5;
+            padding: 12px;
+            border-left: 6px solid var(--secondary);
+            margin-bottom: 20px;
+            font-style: italic;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--success);
+            border: 2px solid var(--text-dark);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin: 0 8px 8px 0;
+            box-shadow: 2px 2px 0px var(--text-dark);
+        }
+
+        .feedback-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 20px;
+            border: var(--border-width) solid var(--text-dark);
+            box-shadow: 10px 10px 0px var(--text-dark);
+            font-weight: 900;
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 12px;
+        }
+
+        .feedback-overlay.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        .feedback-success { background: var(--success); color: var(--text-dark); }
+        .feedback-fail { background: var(--secondary); color: #fff; }
+
+        .footer {
+            text-align: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 25px;
+            margin-top: auto;
+            border-top: var(--border-width) dashed var(--text-dark);
+            background: #fff;
+        }
+
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 12px; }
+        .mb-2 { margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <div class="top-bar" id="top-bar" style="display: none;">
+        <div class="wallet-label">💳 Saldo Emosi</div>
+        <div class="progress-container">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+        <div id="score-text" style="font-weight:900; margin-right:15px; font-size:1.1rem;">0%</div>
+        <button class="audio-btn" id="mute-btn" onclick="toggleAudio()">🔊</button>
+    </div>
+
+    <div id="screen-login" class="screen active">
+        <div class="neo-box" style="margin-top: 40px;">
+            <h1 class="text-center mb-1" style="color: var(--tertiary); font-size: 2.5rem; text-shadow: 2px 2px 0px #000;">WORK-WALLET</h1>
+            <h3 class="text-center mb-2" style="background: var(--primary); padding: 8px; border: 3px solid #000; display: inline-block; width: 100%;">MISI SALDO EMOSI</h3>
+            
+            <p class="mb-2" style="font-weight: 700; line-height: 1.6; font-size: 1.1rem;">
+                Pernah dicuekin temen kantor pas butuh bantuan <em>urgent</em>? Mungkin <strong>"Saldo Emosi"</strong> kamu NOL!
+            </p>
+
+            <input type="text" id="player-name" class="neo-input" placeholder="Nama Panggilan" required>
+            <input type="text" id="player-nik" class="neo-input" placeholder="NIK Karyawan" required>
+            
+            <button class="neo-btn blue" onclick="goToBriefing()">MASUK LOG &gt;&gt;</button>
+        </div>
+        <div class="footer">Education & Training Dept. © 2026</div>
+    </div>
+
+    <div id="screen-briefing" class="screen">
+        <div class="neo-box" style="margin-top: 20px;">
+            <h2 class="mb-1 text-center" style="color: var(--secondary); font-size: 2rem; border-bottom: 4px solid #000; padding-bottom: 10px;">MISSION BRIEFING</h2>
+            <p style="font-size: 1.1rem;">Halo, <span id="display-name" style="font-weight: 900; color: var(--tertiary); font-size: 1.3rem;"></span>!</p>
+            <br>
+            <p class="mb-1" style="line-height: 1.6;"><strong>🎯 OBJECTIVE:</strong> Ubah mindset dari <em>"kerjaan urusan saya sendiri"</em> menjadi <strong>"Saya harus membangun hubungan agar memudahkan urusan kerjaan"</strong>.</p>
+            
+            <div class="neo-box" style="background: var(--bg-color); margin: 25px 0; border-width: 3px; box-shadow: 4px 4px 0px #000;">
+                <h4 class="mb-1" style="font-size: 1.2rem;">💡 3 Taktik Jitu:</h4>
+                <ol style="margin-left: 20px; font-weight: 600; line-height: 1.7;">
+                    <li><strong>Aturan 3 Langkah:</strong> Jarak 3 langkah -> Simpan HP, kontak mata sedetik, angguk, sapa namanya.</li>
+                    <li><strong>Setoran Visual (Introvert):</strong> Kontak mata, anggukan, senyum tipis = deposit gratis.</li>
+                    <li><strong>Interupsi Sopan:</strong> "Permisi Pak/Bu [Nama], maaf mengganggu waktunya sebentar..."</li>
+                </ol>
+            </div>
+
+            <button class="neo-btn green" style="font-size: 1.2rem; padding: 18px;" onclick="startGame()">SAYA SIAP MEMULAI!</button>
+        </div>
+        <div class="footer">Education & Training Dept. © 2026</div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="neo-box">
+            <div id="badge-container" class="mb-1"></div>
+
+            <div class="dialog-image-placeholder" id="q-image">
+                <span id="q-character" style="background: #fff; padding: 5px 15px; border: 3px solid #000; transform: rotate(-2deg); display: inline-block;">Karakter</span>
+            </div>
+            
+            <h3 class="mb-1" id="q-context" style="border-bottom: 3px solid #000; padding-bottom: 8px; color: var(--tertiary);">Konteks</h3>
+            <p class="mb-2" id="q-text" style="font-size: 1.15rem; line-height: 1.6; font-weight: 600;">Pertanyaan...</p>
+            
+            <div class="hint-text" id="q-hint">Hint: Perhatikan jarak kalian!</div>
+
+            <div id="choices-container">
+                <!-- Pilihan akan disuntikkan via JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="neo-box" style="margin-top: 20px; text-align: center;">
+            <h1 class="mb-1" style="font-size: 3rem; text-shadow: 3px 3px 0px #ccc;" id="result-title">GAME OVER</h1>
+            
+            <div class="dialog-image-placeholder" style="background: var(--tertiary); color: #fff; flex-direction: column; height: auto; padding: 30px;">
+                <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 10px;">SALDO EMOSI AKHIR:</div>
+                <div style="font-size: 4rem; text-shadow: 4px 4px 0px #000;" id="final-score">100%</div>
+            </div>
+            
+            <h3 class="mb-1" id="result-status" style="font-size: 1.8rem; margin-top: 20px;">Status</h3>
+            <p class="mb-2" id="result-feedback" style="text-align: left; font-size: 1.1rem; line-height: 1.6; padding: 15px; background: #f9f9f9; border: 2px solid #000; border-radius: 8px;"></p>
+            
+            <div style="text-align: left; margin-top: 25px;">
+                <h4 style="margin-bottom: 15px; border-bottom: 2px solid #ccc; padding-bottom: 5px;">🏆 Badge Diperoleh:</h4>
+                <div id="final-badges" class="mb-2"></div>
+            </div>
+
+            <button class="neo-btn primary" onclick="location.reload()" style="font-size: 1.2rem; padding: 18px;">🔄 MAIN LAGI</button>
+        </div>
+        <div class="footer">Education & Training Dept. © 2026</div>
+    </div>
+
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div id="feedback-msg" style="font-size: 2rem; margin-bottom: 10px;">SUCCESS!</div>
+        <p id="feedback-desc" style="font-size: 1.1rem; line-height: 1.5; font-weight: 600;"></p>
+        <button class="neo-btn" style="margin-top: 25px; background: #fff; color: #000;" onclick="nextQuestion()">LANJUT >></button>
+    </div>
+
+</div>
+
+<script>
+    let audioCtx;
+    let isMuted = false;
+    let bgmGain;
+    let isPlaying = false;
+    let bgmInterval;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function toggleAudio() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('mute-btn');
+        btn.innerText = isMuted ? '🔇' : '🔊';
+        if (bgmGain) {
+            bgmGain.gain.setTargetAtTime(isMuted ? 0 : 0.05, audioCtx.currentTime, 0.1);
+        }
+    }
+
+    function startBGM() {
+        if (isPlaying) return;
+        initAudio();
+        
+        bgmGain = audioCtx.createGain();
+        bgmGain.gain.value = isMuted ? 0 : 0.05;
+        bgmGain.connect(audioCtx.destination);
+
+        // Simple lo-fi synth chord progression (Cmaj7 - Fmaj7 vibe)
+        let notes = [261.63, 329.63, 392.00, 493.88]; // C4, E4, G4, B4
+        let noteIndex = 0;
+
+        bgmInterval = setInterval(() => {
+            if (isMuted || audioCtx.state === 'suspended') return;
+            
+            let osc = audioCtx.createOscillator();
+            osc.type = 'triangle'; // Smooth tone
+            osc.frequency.value = notes[noteIndex];
+            
+            let filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+            
+            let gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            
+            osc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(bgmGain);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+            
+            noteIndex = (noteIndex + 1) % notes.length;
+        }, 600); // Groove speed
+        isPlaying = true;
+    }
+
+    function playSFX(type) {
+        if (isMuted || !audioCtx) return;
+        
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'click') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'badge') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.1);
+            osc.frequency.setValueAtTime(783.99, now + 0.2);
+            osc.frequency.setValueAtTime(1046.50, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+    }
+
+    let playerName = "";
+    let playerNIK = "";
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let earnedBadges = [];
+
+    const questions = [
+        // LEVEL MUDAH (1-5)
+        {
+            character: "Bapak Manager (Divisi Lain)",
+            bgColor: "repeating-linear-gradient(45deg, var(--tertiary), var(--tertiary) 10px, #0e7294 10px, #0e7294 20px)",
+            context: "Lorong - Jarak 3 Langkah",
+            text: "Kamu asik membalas chat di lorong. 3 langkah lagi berpapasan dengan Manager divisi sebelah.",
+            hint: "Hint: Ingat 'Aturan 3 Langkah'!",
+            choices: [
+                { text: "Lanjut jalan nunduk liat HP, kan beda divisi.", isCorrect: false, feedback: "Kesanmu tertutup. Peluang relasi hilang!" },
+                { text: "Simpan HP, kontak mata, angguk kecil, sapa 'Pagi Pak!'", isCorrect: true, feedback: "Tepat! Beliau merasa dihargai eksistensinya." }
+            ]
+        },
+        {
+            character: "Rina (Staff Introvert)",
+            bgColor: "repeating-linear-gradient(45deg, var(--secondary), var(--secondary) 10px, #d13e61 10px, #d13e61 20px)",
+            context: "Di Dalam Lift Berdua",
+            text: "Hanya berdua dengan Rina yang sangat pendiam. Suasana canggung.",
+            hint: "Hint: Orang introvert butuh sapaan yang tidak mengintimidasi.",
+            choices: [
+                { text: "Berikan 'Setoran Visual': Senyum tipis & anggukan.", isCorrect: true, feedback: "Perfect! Deposit gratis tanpa memaksa obrolan." },
+                { text: "Coba interogasi panjang soal kerjaan biar dia ngomong.", isCorrect: false, feedback: "Terlalu agresif! Dia merasa terintimidasi." }
+            ]
+        },
+        {
+            character: "Meja Mas Sigit",
+            bgColor: "repeating-linear-gradient(45deg, var(--primary), var(--primary) 10px, #e5b850 10px, #e5b850 20px)",
+            context: "Rute Pagi Menuju Meja",
+            text: "Melewati deretan meja tim operasional. Biasanya kamu cuek karena beda level kerjaan.",
+            hint: "Hint: Sebut nama adalah investasi termurah.",
+            choices: [
+                { text: "Jalan lurus menatap ke depan ke mejamu.", isCorrect: false, feedback: "Kesempatan deposit saldo terbuang sia-sia." },
+                { text: "Sapa namanya dengan jelas: 'Pagi Mas Sigit'.", isCorrect: true, feedback: "Excellent! Menyebut nama = investasi tinggi." }
+            ]
+        },
+        {
+            character: "Bu Siska (HRD)",
+            bgColor: "repeating-linear-gradient(45deg, var(--success), var(--success) 10px, #05b889 10px, #05b889 20px)",
+            context: "Area Pantry",
+            text: "Antri ambil air minum, di depanmu ada Bu Siska.",
+            hint: "Hint: Basa-basi ringan adalah pelumas hubungan.",
+            choices: [
+                { text: "Tanya ringan: 'Wah, lagi bikin kopi atau teh nih Bu?'", isCorrect: true, feedback: "Benar! Membuka pintu komunikasi dengan positif." },
+                { text: "Langsung tembak: 'Bu, cuti saya kapan approve?'", isCorrect: false, feedback: "TRANSAKSI GAGAL! Kamu menagih tanpa deposit." }
+            ]
+        },
+        {
+            character: "OB Kantor",
+            bgColor: "repeating-linear-gradient(45deg, #bbb, #bbb 10px, #999 10px, #999 20px)",
+            context: "Lobi - Kondisi Buru-Buru",
+            text: "Telat meeting! Berpapasan dengan OB yang mengepel.",
+            hint: "Hint: Kesopanan tidak mengenal level jabatan.",
+            choices: [
+                { text: "Menerobos karena urusan meeting VVIP.", isCorrect: false, feedback: "Tidak sopan. Hubungan baik berlaku untuk semua." },
+                { text: "Kontak mata & bilang 'Permisi Pak, maaf numpang lewat'.", isCorrect: true, feedback: "Luar biasa! Walau buru-buru tetap respek." }
+            ]
+        },
+        // LEVEL SULIT (6-10)
+        {
+            character: "Pak Anton (Finance)",
+            bgColor: "repeating-linear-gradient(45deg, var(--tertiary), var(--tertiary) 10px, #0e7294 10px, #0e7294 20px)",
+            context: "Meja Kerja - Sibuk Berat",
+            text: "Butuh pencairan dana segera. Beliau terlihat pusing mengetik.",
+            hint: "Hint: Gunakan 'The Magic Word' (Interupsi Sopan).",
+            choices: [
+                { text: "'Pak, tolong proses segera, udah urgent dari atas.'", isCorrect: false, feedback: "GAGAL! Kamu tidak menghargai waktunya." },
+                { text: "'Permisi Pak Anton, maaf mengganggu sebentar, boleh saya bertanya...'", isCorrect: true, feedback: "Tepat! Magic Word menghargai kesibukannya." }
+            ]
+        },
+        {
+            character: "Tim IT (Galak)",
+            bgColor: "repeating-linear-gradient(45deg, var(--secondary), var(--secondary) 10px, #d13e61 10px, #d13e61 20px)",
+            context: "Krisis! Laptop Error",
+            text: "Meeting 5 menit lagi. Laptop mati total.",
+            hint: "Hint: Tetap tenang dan hargai keahlian mereka.",
+            choices: [
+                { text: "'Mas! Laptop mati nih, buruan benerin, mau presentasi!'", isCorrect: false, feedback: "Panik bikin kamu tidak sopan. Saldo minus!" },
+                { text: "'Permisi Mas, maaf urgent. Boleh minta tolong bantuannya?'", isCorrect: true, feedback: "Sempurna! Terbuka membuat mereka sigap." }
+            ]
+        },
+        {
+            character: "Staf Divisi Lain",
+            bgColor: "repeating-linear-gradient(45deg, var(--primary), var(--primary) 10px, #e5b850 10px, #e5b850 20px)",
+            context: "Ruang Meeting (Menunggu)",
+            text: "Tiba lebih awal. Di seberang ada staf yang belum kamu kenal.",
+            hint: "Hint: Jangan sembunyi di balik layar HP.",
+            choices: [
+                { text: "Anggukan kepala, senyum, 'Halo, dari divisi mana Mas/Mbak?'", isCorrect: true, feedback: "Hebat! Proaktif membangun jaringan." },
+                { text: "Main HP pura-pura sibuk biar gak canggung.", isCorrect: false, feedback: "Mindset lama! Kehilangan momen berharga." }
+            ]
+        },
+        {
+            character: "Ruang Legal",
+            bgColor: "repeating-linear-gradient(45deg, var(--success), var(--success) 10px, #05b889 10px, #05b889 20px)",
+            context: "Jalan Pintas Hening",
+            text: "Melewati ruang Legal yang setenang perpustakaan.",
+            hint: "Hint: Hargai ruang kerja (territory) orang lain.",
+            choices: [
+                { text: "Jalan cepat sambil ngobrol keras di telepon.", isCorrect: false, feedback: "Merusak ketenangan dan fokus orang lain." },
+                { text: "Jalan pelan, beri Setoran Visual jika ada yang menatap.", isCorrect: true, feedback: "Benar! Beradaptasi dengan lingkungan." }
+            ]
+        },
+        {
+            character: "Mbak Rina",
+            bgColor: "repeating-linear-gradient(45deg, var(--tertiary), var(--tertiary) 10px, #0e7294 10px, #0e7294 20px)",
+            context: "Penarikan Saldo (Minta Tolong)",
+            text: "Terpaksa minta Mbak Rina lembur dadakan untuk datamu.",
+            hint: "Hint: Tarik saldo dengan tetap sopan.",
+            choices: [
+                { text: "'Rin, lembur ya bantuin. Kan kita udah akrab.'", isCorrect: false, feedback: "GAGAL! Jangan manipulatif dan semena-mena." },
+                { text: "'Mbak Rina, maaf mengganggu. Boleh saya minta bantuannya sebentar?'", isCorrect: true, feedback: "SUCCESS! Karena saldomu penuh, dia bantu!" }
+            ]
+        }
+    ];
+
+    function goToBriefing() {
+        initAudio(); // Initialize audio context on first user gesture
+        playSFX('click');
+        playerName = document.getElementById('player-name').value.trim();
+        playerNIK = document.getElementById('player-nik').value.trim();
+        
+        if (!playerName || !playerNIK) {
+            alert("Harap isi Nama dan NIK terlebih dahulu!");
+            return;
+        }
+
+        document.getElementById('display-name').innerText = playerName;
+        document.getElementById('screen-login').classList.remove('active');
+        document.getElementById('screen-briefing').classList.add('active');
+    }
+
+    function startGame() {
+        playSFX('click');
+        startBGM();
+        document.getElementById('screen-briefing').classList.remove('active');
+        document.getElementById('top-bar').style.display = 'flex';
+        document.getElementById('screen-game').classList.add('active');
+        
+        currentQuestionIndex = 0;
+        score = 0;
+        earnedBadges = [];
+        updateUI();
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        
+        document.getElementById('q-character').innerText = q.character;
+        document.getElementById('q-image').style.background = q.bgColor;
+        document.getElementById('q-context').innerText = `Skenario ${currentQuestionIndex + 1}/10: ${q.context}`;
+        document.getElementById('q-text').innerText = `"${q.text}"`;
+        document.getElementById('q-hint').innerText = q.hint;
+
+        const container = document.getElementById('choices-container');
+        container.innerHTML = "";
+
+        // Mengacak posisi pilihan
+        let choices = [...q.choices];
+        if (Math.random() > 0.5) choices.reverse();
+
+        choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'neo-btn';
+            btn.style.background = '#fff';
+            btn.style.textAlign = 'left';
+            btn.style.fontWeight = '600';
+            btn.style.textTransform = 'none';
+            btn.innerText = choice.text;
+            btn.onclick = () => selectChoice(choice);
+            container.appendChild(btn);
+        });
+    }
+
+    function selectChoice(choice) {
+        const overlay = document.getElementById('feedback-overlay');
+        const msg = document.getElementById('feedback-msg');
+        const desc = document.getElementById('feedback-desc');
+
+        if (choice.isCorrect) {
+            playSFX('correct');
+            score += 10;
+            msg.innerText = "🪙 SUCCESS!";
+            overlay.className = 'feedback-overlay feedback-success show';
+        } else {
+            playSFX('wrong');
+            msg.innerText = "❌ TRANSAKSI GAGAL!";
+            overlay.className = 'feedback-overlay feedback-fail show';
+        }
+        
+        desc.innerText = choice.feedback;
+        updateUI();
+    }
+
+    function updateUI() {
+        const progressPercent = score;
+        document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        document.getElementById('score-text').innerText = `${progressPercent}%`;
+
+        const badgeContainer = document.getElementById('badge-container');
+        badgeContainer.innerHTML = "";
+
+        // Evaluasi Badge
+        if (currentQuestionIndex === 4 && score >= 40 && !earnedBadges.includes('🥉 Rookie Depositor')) {
+            earnedBadges.push('🥉 Rookie Depositor');
+            setTimeout(() => playSFX('badge'), 500); // Mainkan sfx spesial
+        }
+        if (currentQuestionIndex === 9 && score >= 80 && !earnedBadges.includes('🏆 Master of Empathy')) {
+            earnedBadges.push('🏆 Master of Empathy');
+        }
+
+        earnedBadges.forEach(badge => {
+            const b = document.createElement('span');
+            b.className = 'badge';
+            b.innerText = badge;
+            badgeContainer.appendChild(b);
+        });
+    }
+
+    function nextQuestion() {
+        playSFX('click');
+        document.getElementById('feedback-overlay').classList.remove('show');
+        
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        document.getElementById('screen-game').classList.remove('active');
+        document.getElementById('top-bar').style.display = 'none';
+        document.getElementById('screen-result').classList.add('active');
+
+        document.getElementById('final-score').innerText = `${score}%`;
+        
+        const statusEl = document.getElementById('result-status');
+        const feedbackEl = document.getElementById('result-feedback');
+        
+        if (score >= 80) {
+            statusEl.innerText = "🎉 Saldo LUBER!";
+            statusEl.style.color = "var(--success)";
+            feedbackEl.innerHTML = `Luar Biasa <strong>${playerName}</strong>! Mindset-mu telah berubah. Dengan saldo emosi setinggi ini, semua urusan kerjamu akan jauh lebih mudah karena rekan-rekanmu akan kooperatif membantu.`;
+        } else if (score >= 50) {
+            statusEl.innerText = "⚠️ Rawan Defisit";
+            statusEl.style.color = "var(--primary)";
+            feedbackEl.innerHTML = `Cukup bagus <strong>${playerName}</strong>. Kamu mulai menyapa, tapi di situasi kritis kamu masih lupa menggunakan <em>Magic Word</em>. Tingkatkan lagi deposit harianmu!`;
+        } else {
+            statusEl.innerText = "⛔ Rekening Dibekukan";
+            statusEl.style.color = "var(--secondary)";
+            feedbackEl.innerHTML = `Wah <strong>${playerName}</strong>, mindset-mu masih berpusat pada diri sendiri. Ingat, kamu tidak bisa bekerja sendiri. Mulailah menyapa rekan kerjamu, atau pekerjaanmu akan terus dipersulit.`;
+        }
+
+        const finalBadges = document.getElementById('final-badges');
+        if (earnedBadges.length > 0) {
+            earnedBadges.forEach(badge => {
+                const b = document.createElement('span');
+                b.className = 'badge';
+                b.style.fontSize = '1.1rem';
+                b.style.marginBottom = '10px';
+                b.innerText = badge;
+                finalBadges.appendChild(b);
+            });
+        } else {
+            finalBadges.innerHTML = "<em style='color:var(--secondary);'>Belum ada badge. Terus berlatih!</em>";
+        }
+    }
+
+</script>
+</body>
+</html>
